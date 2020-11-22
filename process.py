@@ -11,7 +11,9 @@ class ProcessCircle:
         """Construct new Processor."""
         super().__init__()
         self.state:list = []
-        self.solution:dict = {}
+        # state Stores Diameter
+        self.solution:list = []
+        # solution stores updated solution after each data input
 
     def reset(self):
         """Reset for further processind on different data-set."""
@@ -23,13 +25,26 @@ class ProcessCircle:
         try:
             p1, p2 = self.state[0:2]
         except(ValueError):
+            l = len(self.state)
+            if l >= 2:
+                raise RuntimeError("Something was WRONG!!!")
             self.state.append(datum)
-            if len(self.state) == 2:
+            if l == 1:
+                self.solution.append(datum)
+                self.solution.append(0)
+            if l == 2:
                 p1, p2 = self.state[0:2]
-                self.solution["centre"] = ((p1[0] + p2[0])/2, (p1[1] + p2[1])/2)
-                self.solution["radius"] = ProcessCircle.distance(p1,p2)
+                self.solution[0] = ((p1[0] + p2[0])/2, (p1[1] + p2[1])/2)
+                self.solution[1] = ProcessCircle.distance(p1, p2)
             return
-        pass
+        if ProcessCircle.distance(self.solution[0], datum) < self.solution[1]:
+            return
+        self.newCentre(p1, p2, datum)
+
+    def newCentre(self, pointA, pointB, newPoint):
+        """Calculate new circle and diameter."""
+        # y = mx + c
+        m = ProcessCircle.slope(pointA, pointB)
 
 
     @staticmethod
@@ -46,11 +61,24 @@ class ProcessCircle:
     def process(dataSrcName):
         """Process data provided at once."""
         processor = ProcessCircle()
-        for data in ProcessCircle.reader(dataSrcName):
-            processor.streamProcess(data)
-        return processor.solution
+        data = []
+        for datum in ProcessCircle.reader(dataSrcName):
+            processor.streamProcess(datum)
+            data.append(datum)
+        return data, processor.solution
 
     @staticmethod
     def distance(thisPoint, thatPoint):
         """Return distance between two points."""
         return ( ((thisPoint[1] - thatPoint[1]) ** 2) + ((thisPoint[0] - thatPoint[0]) ** 2) ) * 0.5
+
+    @staticmethod
+    def slope(thisPoint, thatPoint):
+        """Find Slope."""
+        return ((thisPoint[1] - thatPoint[1]) / (thisPoint[0] - thisPoint[0]))
+
+    @staticmethod
+    def rotate(thisPoint, centreOfRotation):
+        """Return a rotated point."""
+        ret = [(2 * centreOfRotation[0] - thisPoint[0]), (2 * centreOfRotation[1] - thisPoint[1])]
+        return ret

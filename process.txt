@@ -1,0 +1,9 @@
+0 START
+1 start with two points, initialize  circle passing through them(set centre as
+  midpoint of the points), initialize a diameter
+2 read in next point, if none left goto step 5
+3 if point is on/inside the circle, repeat step 2, else goto step 4
+4 update the centre of the circle to a point along the diameter(infinite line)
+  such that the new point and the diametric point farthest from the point are
+  equidistant to this new centre. Update the new diameter
+5 STOP
