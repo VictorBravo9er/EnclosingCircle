@@ -1,5 +1,6 @@
 """Processing module."""
-
+from os import times
+import random as rnd
 import numpy as np
 from numpy import sin, cos, inf, pi
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ class ProcessCircle:
         """Construct new Processor."""
         super().__init__()
         # state Stores Diameter
-        self.centre: tuple
+        self.centre = None
         self.radius: float
         self.m: float
         self.c: float
@@ -123,11 +124,12 @@ class ProcessCircle:
                     yield(temp)
 
     @staticmethod
-    def process(dataSrcName):
+    def process(data):
         """Process data provided at once. O(n)."""
-        processor = ProcessCircle()
-        data = list(ProcessCircle.reader(dataSrcName))
+        if isinstance(data, str):
+            data = list(ProcessCircle.reader(data))
         """O(n)."""
+        processor = ProcessCircle()
         processor.calculate(data)
         """O(n)."""
         return data, processor.target, processor.centre, processor.radius
@@ -168,3 +170,29 @@ class ProcessCircle:
         a = radius*cos(theta) + centre[0]
         b = radius*sin(theta) + centre[1]
         return(a,b)
+
+    @staticmethod
+    def simulate(iter, num):
+        """Simulate World."""
+        if num < 5:
+            num = 5
+        np.random.seed(id(iter) % num)
+        for i in range(iter):
+            data = np.random.randint(low= -25, high= 25, size= (2,rnd.randint(5, 2*num)))
+            data = list(zip(data[0], data[1]))
+            data, targets, centre, radius = ProcessCircle.process(data)
+            ProcessCircle.test(data,centre,radius)
+
+            print(centre, radius)
+            _, a = plt.subplots(1)
+            x = [x for (x,y) in data]
+            y = [y for (x,y) in data]
+            cirX, cirY = ProcessCircle.getCircle(centre, radius)
+            a.scatter(x,y,s=10)
+            a.scatter(*centre, color="red")
+            a.plot(cirX, cirY, color="green")
+            a.set_aspect(1)
+            plt.savefig(fname=f"out/out{i+1}.png")
+            with open(file=f"out/out{i+1}.txt", mode="w") as file:
+                file.write(f"{data}\n\ntargets: {targets}\nCentre: {centre}\nRadius: {radius}")
+            print()
