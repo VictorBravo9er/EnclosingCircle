@@ -1,9 +1,13 @@
 0 START
 1 start with two points, initialize  circle passing through them(set centre as
-  midpoint of the points), initialize a diameter
-2 read in next point, if none left goto step 5
+  midpoint of the points), Select these points such that every other point are
+  to one side of these points. O(n)
+  Also initialize any related values related to the perpendicular bisector of
+  these points, namely m and c. O(1)
+  We will be drawing the circle passing throught these points, whatsoever.
+2 read in all points, if none left goto step 5 O(n)
 3 if point is on/inside the circle, repeat step 2, else goto step 4
-4 update the centre of the circle to a point along the diameter(infinite line)
-  such that the new point and the diametric point farthest from the point are
-  equidistant to this new centre. Update the new diameter
+4 Update the centre of the circle to a point along the perpendicular bisector of
+  the initial two points, in such a way that the new point is also equidistant 
+  to this new centre. O(1)
 5 STOP

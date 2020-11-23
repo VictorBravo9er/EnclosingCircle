@@ -8,14 +8,16 @@ import matplotlib.pyplot as plt
 class ProcessCircle:
     """Class for circle processing."""
 
+    _limit = 0.00001
+
     def __init__(self) -> None:
         """Construct new Processor."""
         super().__init__()
         # state Stores Diameter
-        self.centre = tuple()
-        self.radius:float
-        self.m:float
-        self.c:float
+        self.centre: tuple
+        self.radius: float
+        self.m: float
+        self.c: float
         # solution stores updated solution after each data input
 
     @staticmethod
@@ -26,16 +28,16 @@ class ProcessCircle:
         buf = (1,)
         buf = np.array(buf + pointA + buf + pointB + buf + target).reshape(3,-1)
         buf = np.linalg.det(buf)
-        if buf < -0.00001:
+        """Using a limit may cause bugs. 0.00001 for now."""
+        if buf < -ProcessCircle._limit:
             return 0
-        if buf < 0.00001:
+        if buf < ProcessCircle._limit:
             return 1
         return -1
 
-    @staticmethod
-    def preProcess(data):
+    def preProcess(self, data):
         """Preprocess data. find two lowest points to anchor circle around. O(n)."""
-        lowest =data[0]
+        lowest = data[0]
         nextPoint = lowest
         for point in data[1:]:
             """O(n)."""
@@ -54,10 +56,29 @@ class ProcessCircle:
                     nextPoint = point
         centr = ((lowest[0] + nextPoint[0]) * 0.5, (lowest[1] + nextPoint[1]) * 0.5)
         radSq = ProcessCircle.distanceSquared(lowest, centr)
-        return lowest, nextPoint, centr, radSq
+        self.centre, self.radius = centr, radSq
+        m = ProcessCircle.slope(lowest, nextPoint)
+        if m == 0:
+            self.m = inf
+            self.c = centr[0]
+        elif m == inf:
+            self.m = 0
+            self.c = centr[1]
+        else:
+            m = -(1.0/m)
+            self.m = m
+            self.c = centr[1] - m * centr[0]
+        """ m & c initialised."""
+        return lowest, nextPoint
 
     def updateCircle(self, point, newPoint):
         """Update circele accordingly. O(1)."""
+        """
+        Equations used:
+            y = mx + y - for perpendicular bisector of initial anchor points
+            distance(anchor, newCentre) = distance(newPoint, newCentre)
+            newCentre = (x,y)
+        """
         x_ = point[0] - newPoint[0]
         y_ = point[1] - newPoint[1]
         _x = point[0] + newPoint[0]
@@ -69,33 +90,25 @@ class ProcessCircle:
             x = c
             y = (_x * x_ + _y * y_ - 2 * x * x_) / (2 * y_)
         else:
-            x = (_x * x_ + (_y - 2 * c) * y_) /(2 * (x_ + m * y_))
+            # x = (_x x_ + (_y - 2 c) y_) /(2 * (x_ + m * y_))
+            x = (_x * x_ + (_y - 2 * c) * y_) / (2 * (x_ + m * y_))
             y = m * x + c
-        self.centre = (x,y)
-        self.radiusSq = ProcessCircle.distanceSquared(point, (x,y))
+        """newCentre calculated."""
+        self.centre = (x, y)
+        self.radius = ProcessCircle.distanceSquared(point, (x,y))
+        """Storing pythagorean distance(squared)."""
 
-    def atomicProcess(self, data):
+    def calculate(self, data):
         """Process all points at once. O(n)."""
-        anc1 , anc2, self.centre, self.radiusSq = ProcessCircle.preProcess(data)
-        # O(1)
-        m = ProcessCircle.slope(anc1, anc2)
-        if m == 0:
-            self.m = inf
-            self.c = self.centre[0]
-        elif m == inf:
-            self.m = 0
-            self.c = self.centre[1]
-        else:
-            self.m = -(1.0/m)
-            self.c = self.centre[1] - self.m * self.centre[0]
+        anc1, anc2 = self.preProcess(data)
         for point in data:
             """O(n)."""
             if point in (anc1, anc2):
                 continue
             distSq = ProcessCircle.distanceSquared(self.centre, point)
-            if distSq > self.radiusSq:
+            if distSq > self.radius:
                 self.updateCircle(anc1, point)
-        self.radius = self.radiusSq ** 0.5
+        self.radius = self.radius ** 0.5
         self.target = (anc1, anc2)
         return 
 
@@ -115,7 +128,7 @@ class ProcessCircle:
         processor = ProcessCircle()
         data = list(ProcessCircle.reader(dataSrcName))
         """O(n)."""
-        processor.atomicProcess(data)
+        processor.calculate(data)
         """O(n)."""
         return data, processor.target, processor.centre, processor.radius
 
@@ -138,13 +151,8 @@ class ProcessCircle:
         return ((thisPoint[1] - thatPoint[1]) / den)
 
     @staticmethod
-    def rotate(thisPoint, centreOfRotation):
-        """Return a rotated point."""
-        ret = [(2 * centreOfRotation[0] - thisPoint[0]), (2 * centreOfRotation[1] - thisPoint[1])]
-        return ret
-
-    @staticmethod
     def test(data, centre, radius):
+        """Test for correcctness."""
         for point in data:
             r = ProcessCircle.distance(centre,point)
             try:
