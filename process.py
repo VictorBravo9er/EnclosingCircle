@@ -192,7 +192,7 @@ class ProcessCircle:
             a.scatter(*centre, color="red")
             a.plot(cirX, cirY, color="green")
             a.set_aspect(1)
-            plt.savefig(fname=f"out/out{i+1}.png")
-            with open(file=f"out/out{i+1}.txt", mode="w") as file:
+            plt.savefig(fname=f"simulation/out{i+1}.png")
+            with open(file=f"simulation/out{i+1}.txt", mode="w") as file:
                 file.write(f"{data}\n\ntargets: {targets}\nCentre: {centre}\nRadius: {radius}")
             print()
