@@ -16,7 +16,9 @@ d = {"x":x, "y":y,"centres":centres}
 with open("log.json", mode="w") as file:
     file.write(dumps(d))
 """
-#exit()
+
+
+exit()
 l = len(x)
 for i in range(l):
     cir = Circle(centres[i], radius[i])

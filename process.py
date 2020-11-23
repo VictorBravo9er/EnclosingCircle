@@ -91,7 +91,7 @@ class ProcessCircle:
         for datum in ProcessCircle.reader(dataSrcName):
             processor.streamProcess(datum)
             data.append(datum)
-        processor.solution[1] **= 0.5
+        processor.solution[1] = processor.solution[1] ** 0.5
         return data, processor.solution
 
     @staticmethod
