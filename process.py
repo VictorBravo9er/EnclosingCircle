@@ -176,6 +176,7 @@ class ProcessCircle:
         """Simulate World."""
         if num < 5:
             num = 5
+        rnd.seed(id(iter) % num)
         np.random.seed(id(iter) % num)
         for i in range(iter):
             data = np.random.randint(low= -25, high= 25, size= (2,rnd.randint(5, 2*num)))
@@ -184,7 +185,7 @@ class ProcessCircle:
             ProcessCircle.test(data,centre,radius)
 
             print(centre, radius)
-            _, a = plt.subplots(1)
+            f, a = plt.subplots(1)
             x = [x for (x,y) in data]
             y = [y for (x,y) in data]
             cirX, cirY = ProcessCircle.getCircle(centre, radius)
@@ -196,3 +197,4 @@ class ProcessCircle:
             with open(file=f"simulation/out{i+1}.txt", mode="w") as file:
                 file.write(f"{data}\n\ntargets: {targets}\nCentre: {centre}\nRadius: {radius}")
             print()
+            plt.close()
