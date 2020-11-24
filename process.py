@@ -1,9 +1,9 @@
 """Processing module."""
-from os import times
 import random as rnd
 import numpy as np
 from numpy import sin, cos, inf, pi
 import matplotlib.pyplot as plt
+from numpy.lib.polynomial import polymul
 
 
 class ProcessCircle:
@@ -30,21 +30,29 @@ class ProcessCircle:
         buf = np.array(buf + pointA + buf + pointB + buf + target).reshape(3,-1)
         buf = np.linalg.det(buf)
         """Using a limit may cause bugs. 0.00001 for now."""
-        if buf < -ProcessCircle._limit:
+        """if buf < -ProcessCircle._limit:"""
+        if buf < 0:
             return 0
-        if buf < ProcessCircle._limit:
+        if buf == 0:
             return 1
         return -1
 
-    def preProcess(self, data):
-        """Preprocess data. find two lowest points to anchor circle around. O(n)."""
-        lowest = data[0]
-        nextPoint = lowest
-        for point in data[1:]:
-            """O(n)."""
+    @staticmethod
+    def findLowest(points):
+        lowest = points[0]
+        for point in points:
             if lowest[1] > point[1]:
                 lowest = point
-        for point in data:
+        nextPoint = lowest
+        for point in points:
+            if lowest[1] == point[1]:
+                if lowest[0] > point[0]:
+                    lowest = point
+                elif nextPoint[0] > point[0]:
+                    nextPoint = point
+        if lowest[0] != nextPoint[0]:
+            return lowest, nextPoint
+        for point in points:
             """O(n)."""
             cond = ProcessCircle.orientation(lowest, nextPoint, point)
             if cond == -1:
@@ -55,7 +63,15 @@ class ProcessCircle:
             if cond == 1:
                 if ProcessCircle.distanceSquared(lowest, nextPoint) < ProcessCircle.distanceSquared(lowest, point):
                     nextPoint = point
-        centr = ((lowest[0] + nextPoint[0]) * 0.5, (lowest[1] + nextPoint[1]) * 0.5)
+        return lowest, nextPoint
+
+    def preProcess(self, data):
+        """Preprocess data. find two lowest points to anchor circle around. O(n)."""
+        lowest, nextPoint = ProcessCircle.findLowest(data)
+        centr = (
+                    (lowest[0] + nextPoint[0]) * 0.5,
+                    (lowest[1] + nextPoint[1]) * 0.5
+                )
         radSq = ProcessCircle.distanceSquared(lowest, centr)
         self.centre, self.radius = centr, radSq
         m = ProcessCircle.slope(lowest, nextPoint)
@@ -72,8 +88,9 @@ class ProcessCircle:
         """ m & c initialised."""
         return lowest, nextPoint
 
-    def updateCircle(self, point, newPoint):
+    def updateCircle(self, newPoint):
         """Update circele accordingly. O(1)."""
+        point = self.target[0]
         """
         Equations used:
             y = mx + y - for perpendicular bisector of initial anchor points
@@ -84,6 +101,8 @@ class ProcessCircle:
         y_ = point[1] - newPoint[1]
         _x = point[0] + newPoint[0]
         _y = point[1] + newPoint[1]
+        if y_ == 0:
+            return
         m = self.m
         c = self.c
         if m == inf:
@@ -102,15 +121,15 @@ class ProcessCircle:
     def calculate(self, data):
         """Process all points at once. O(n)."""
         anc1, anc2 = self.preProcess(data)
+        self.target = (anc1, anc2)
         for point in data:
             """O(n)."""
             if point in (anc1, anc2):
                 continue
             distSq = ProcessCircle.distanceSquared(self.centre, point)
             if distSq > self.radius:
-                self.updateCircle(anc1, point)
+                self.updateCircle(point)
         self.radius = self.radius ** 0.5
-        self.target = (anc1, anc2)
         return 
 
     @staticmethod
@@ -182,19 +201,19 @@ class ProcessCircle:
             data = np.random.randint(low= -25, high= 25, size= (2,rnd.randint(5, 2*num)))
             data = list(zip(data[0], data[1]))
             data, targets, centre, radius = ProcessCircle.process(data)
-            ProcessCircle.test(data,centre,radius)
+            #ProcessCircle.test(data,centre,radius)
 
-            print(centre, radius)
+            print(targets, centre, radius)
             f, a = plt.subplots(1)
-            x = [x for (x,y) in data]
-            y = [y for (x,y) in data]
+            x = [x for (x, y) in data]
+            y = [y for (x, y) in data]
             cirX, cirY = ProcessCircle.getCircle(centre, radius)
-            a.scatter(x,y,s=10)
+            a.scatter(x, y, s=1)
             a.scatter(*centre, color="red")
             a.plot(cirX, cirY, color="green")
             a.set_aspect(1)
             plt.savefig(fname=f"simulation/out{i+1}.png")
             with open(file=f"simulation/out{i+1}.txt", mode="w") as file:
-                file.write(f"{data}\n\ntargets: {targets}\nCentre: {centre}\nRadius: {radius}")
+                file.write(f"{data}\n\ntargets: {targets}\nSize: {len(data)}\nCentre: {centre}\nRadius: {radius}")
             print()
             plt.close()
