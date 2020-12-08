@@ -23,11 +23,13 @@ class ProcessCircle:
 
     @staticmethod
     def orientation(pointA, pointB, target):
-        """Orientation test. 0 - go for it, 1 - decide, -1 - no go, next please. O(1)."""
+        """Orientation test.\
+        0 - go for it, 1 - decide, -1 - no go, next please. O(1)."""
         if target in (pointA, pointB):
             return -1
         buf = (1,)
-        buf = np.array(buf + pointA + buf + pointB + buf + target).reshape(3,-1)
+        buf = np.array(buf + pointA + buf + pointB + buf + target).\
+            reshape(3, -1)
         buf = np.linalg.det(buf)
         """Using a limit may cause bugs. 0.00001 for now."""
         """if buf < -ProcessCircle._limit:"""
@@ -39,6 +41,7 @@ class ProcessCircle:
 
     @staticmethod
     def findLowest(points):
+        """Find lowest point in point-set."""
         lowest = points[0]
         for point in points:
             if lowest[1] > point[1]:
@@ -61,12 +64,14 @@ class ProcessCircle:
                 nextPoint = point
                 continue
             if cond == 1:
-                if ProcessCircle.distanceSquared(lowest, nextPoint) < ProcessCircle.distanceSquared(lowest, point):
+                if ProcessCircle.distanceSquared(lowest, nextPoint) \
+                     < ProcessCircle.distanceSquared(lowest, point):
                     nextPoint = point
         return lowest, nextPoint
 
     def preProcess(self, data):
-        """Preprocess data. find two lowest points to anchor circle around. O(n)."""
+        """Preprocess data. \
+            find two lowest points to anchor circle around. O(n)."""
         lowest, nextPoint = ProcessCircle.findLowest(data)
         centr = (
                     (lowest[0] + nextPoint[0]) * 0.5,
@@ -115,7 +120,7 @@ class ProcessCircle:
             y = m * x + c
         """newCentre calculated."""
         self.centre = (x, y)
-        self.radius = ProcessCircle.distanceSquared(point, (x,y))
+        self.radius = ProcessCircle.distanceSquared(point, (x, y))
         """Storing pythagorean distance(squared)."""
 
     def calculate(self, data):
@@ -130,7 +135,6 @@ class ProcessCircle:
             if distSq > self.radius:
                 self.updateCircle(point)
         self.radius = self.radius ** 0.5
-        return 
 
     @staticmethod
     def reader(file):
@@ -156,7 +160,8 @@ class ProcessCircle:
     @staticmethod
     def distanceSquared(thisPoint, thatPoint):
         """Return squared distance between two points."""
-        return( ((thisPoint[1] - thatPoint[1]) ** 2) + ((thisPoint[0] - thatPoint[0]) ** 2) )
+        return((thisPoint[1] - thatPoint[1]) ** 2) + \
+            ((thisPoint[0] - thatPoint[0]) ** 2)
 
     @staticmethod
     def distance(thisPoint, thatPoint):
@@ -175,7 +180,7 @@ class ProcessCircle:
     def test(data, centre, radius):
         """Test for correcctness."""
         for point in data:
-            r = ProcessCircle.distance(centre,point)
+            r = ProcessCircle.distance(centre, point)
             try:
                 assert r < radius
             except(Exception):
@@ -188,7 +193,7 @@ class ProcessCircle:
 
         a = radius*cos(theta) + centre[0]
         b = radius*sin(theta) + centre[1]
-        return(a,b)
+        return(a, b)
 
     @staticmethod
     def simulate(iter, num):
@@ -198,10 +203,12 @@ class ProcessCircle:
         rnd.seed(id(iter) % num)
         np.random.seed(id(iter) % num)
         for i in range(iter):
-            data = np.random.randint(low= -25, high= 25, size= (2,rnd.randint(5, 2*num)))
+            data = np.random.randint(
+                low=-25, high=25, size=(2, rnd.randint(5, 2*num))
+                )
             data = list(zip(data[0], data[1]))
             data, targets, centre, radius = ProcessCircle.process(data)
-            #ProcessCircle.test(data,centre,radius)
+            # ProcessCircle.test(data,centre,radius)
 
             print(targets, centre, radius)
             f, a = plt.subplots(1)
@@ -214,6 +221,9 @@ class ProcessCircle:
             a.set_aspect(1)
             plt.savefig(fname=f"simulation/out{i+1}.png")
             with open(file=f"simulation/out{i+1}.txt", mode="w") as file:
-                file.write(f"{data}\n\ntargets: {targets}\nSize: {len(data)}\nCentre: {centre}\nRadius: {radius}")
+                file.write(
+                    f"{data}\n\ntargets: {targets}\nSize: {len(data)}\nCentre:\
+                         {centre}\nRadius: {radius}"
+                    )
             print()
             plt.close()
